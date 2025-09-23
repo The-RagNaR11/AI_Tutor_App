@@ -35,3 +35,7 @@ val ColorHint = Color(0xFF808080)
 val ColorError = Color(0xFFFF3B30)
 val ColorSuccess = Color(0xFF34C759)
 val ColorWarning = Color(0xFFFF9500)
+
+// Colors extracted from the image for accuracy
+val SendButtonColor = Color(0xFF418AFF)
+val textFieldBackgroundColor = Color(0xFFF0F0F0)

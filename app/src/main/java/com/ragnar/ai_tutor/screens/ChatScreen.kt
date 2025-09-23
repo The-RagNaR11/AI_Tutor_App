@@ -3,6 +3,7 @@ package com.ragnar.ai_tutor.screens
 import android.webkit.WebView
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -11,26 +12,37 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.outlined.Mic
 import androidx.compose.material.icons.outlined.SmartToy
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -38,12 +50,12 @@ import com.ragnar.ai_tutor.core.SpeechToText
 import com.ragnar.ai_tutor.core.TextToSpeech
 import com.ragnar.ai_tutor.item.ChatMessage
 import com.ragnar.ai_tutor.item.ChatMessageBubble
-import com.ragnar.ai_tutor.ui.theme.AppTheme
 import com.ragnar.ai_tutor.ui.theme.BackgroundPrimary
 import com.ragnar.ai_tutor.ui.theme.BackgroundSecondary
 import com.ragnar.ai_tutor.ui.theme.BrandPrimary
 import com.ragnar.ai_tutor.ui.theme.ColorHint
 import com.ragnar.ai_tutor.ui.theme.ColorSuccess
+import com.ragnar.ai_tutor.ui.theme.SendButtonColor
 import com.ragnar.ai_tutor.ui.theme.TextPrimary
 import com.ragnar.ai_tutor.ui.theme.TextSecondary
 import com.ragnar.ai_tutor.ui.theme.White
@@ -59,6 +71,8 @@ fun ChatScreen(
     val ttsState by ttsController.state.collectAsState() // TTS states
     val sttState by sttController.state.collectAsState() // STT states
 
+    var messageInput by remember { mutableStateOf("") }
+
     // Sample chat messages
     val sampleMessages = listOf(
         ChatMessage("Hi Sarah, I need help with algebra", false),
@@ -70,7 +84,8 @@ fun ChatScreen(
 
 
     Surface(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
             .background(White)
     ) {
         Column(
@@ -129,7 +144,7 @@ fun ChatScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(White)
+                        .background(BackgroundPrimary)
                         .padding(0.dp, 10.dp)
                 ) {
                     Row(
@@ -177,7 +192,6 @@ fun ChatScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(White)
-//                        .padding(0.dp, 10.dp)
                 ) {
                     // Previous message display text
                     Row(
@@ -222,22 +236,99 @@ fun ChatScreen(
 
                 }
             }
+
             /*
             Send Message Card
              */
-            Card(
+            Card (
                 border = BorderStroke(1.dp, ColorHint),
                 elevation = CardDefaults.cardElevation(defaultElevation = 12.dp) ,
                 modifier = Modifier
                     .align(Alignment.Start)
-            ) {
-                Row (
+                    .padding(0.dp, 15.dp)
+            ){
+                Column(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .background(White)
+                        .background(BackgroundPrimary)
                 ) {
-                    OutlinedTextField()
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // standard TextField
+                        TextField(
+                            value = messageInput,
+                            onValueChange = { messageInput = it },
+                            modifier = Modifier.weight(1f),
+                            placeholder = { Text("Ask Sarah a question...") },
+                            shape = RoundedCornerShape(20.dp),
+                            singleLine = false,
+                            colors = TextFieldDefaults.colors(
+                                unfocusedIndicatorColor = Color.Transparent,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedContainerColor = BackgroundSecondary,
+                                focusedContainerColor = BackgroundSecondary,
+                                cursorColor = ColorHint,
+                                focusedTextColor = TextPrimary,
+                                unfocusedTextColor = TextSecondary,
+                                unfocusedPlaceholderColor = TextSecondary,
+                                focusedPlaceholderColor = TextSecondary
+                            )
+                        )
+
+                        // IconButton for the send button
+                        IconButton(
+                            onClick = {
+
+                            },
+                            modifier = Modifier.size(48.dp),
+                            colors = IconButtonDefaults.iconButtonColors(
+                                containerColor = SendButtonColor,
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.Send,
+                                contentDescription = "Send Message"
+                            )
+                        }
+
+                        // IconButton for the mic button
+                        IconButton(
+                            onClick = {
+
+                            },
+                            modifier = Modifier
+                                .size(48.dp)
+                                .border(1.dp, SendButtonColor, CircleShape)
+                        ) {
+                            Icon(
+                                Icons.Outlined.Mic,
+                                contentDescription = "Record Audio",
+                                tint = SendButtonColor
+                            )
+                        }
+                    }
+
+                    // "Tap to send" text below the Row
+                    Text(
+                        text = "Tap to send",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = ColorHint,
+                        modifier = Modifier.padding(start = 20.dp, bottom = 8.dp)
+                    )
                 }
+            }
+
+            /*
+            Audio Output Card
+             */
+
+            Card {
+
             }
         }
     }

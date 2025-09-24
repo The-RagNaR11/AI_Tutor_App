@@ -120,6 +120,7 @@ class SpeechToText: ViewModel() {
                 statusMessage = "Listening...."
             )
             Log.d(TAG, "Listening..........")
+
         } catch (e: Exception){
             _state.value = _state.value.copy(
                 statusMessage = "Error Starting speech recognizer....."
@@ -181,6 +182,7 @@ class SpeechToText: ViewModel() {
                 statusMessage = errorMessage
             )
             Log.e(TAG, errorMessage)
+            Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
         }
 
         override fun onEvent(eventType: Int, params: Bundle?) { }

@@ -1,4 +1,4 @@
-package com.ragnar.ai_tutor.core
+package com.ragnar.ai_tutor.speechModels
 
 import android.content.Context
 import android.Manifest
@@ -33,7 +33,7 @@ class SpeechToText: ViewModel() {
         val isSpeaking: Boolean = false,
         val selectedLanguage: String = "en-IN",
         val statusMessage: String = "",
-        val resultText: String = "",
+        var resultText: String = "",
         val hasPermission: Boolean = false
     )
 

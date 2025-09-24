@@ -1,6 +1,5 @@
 package com.ragnar.ai_tutor.item
 
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,26 +22,19 @@ import com.ragnar.ai_tutor.ui.theme.TextPrimary
 import com.ragnar.ai_tutor.ui.theme.TextSecondary
 import com.ragnar.ai_tutor.ui.theme.White
 
-
-// Data class for chat messages
-data class ChatMessage(
-    val text: String,
-    val isFromAI: Boolean,
-    val timestamp: String = ""
-)
-
-
 @Composable
 fun ChatMessageBubble(
     message: ChatMessage,
+    onRetry: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
+    val isFromAI = message.sender == "ai"
 
     Row(
         modifier = modifier,
-        horizontalArrangement = if (message.isFromAI) Arrangement.Start else Arrangement.End
+        horizontalArrangement = if (isFromAI) Arrangement.Start else Arrangement.End
     ) {
-        if (message.isFromAI) {
+        if (isFromAI) {
             // AI message - aligned left
             Row(
                 modifier = Modifier.widthIn(max = 280.dp)
@@ -61,7 +53,7 @@ fun ChatMessageBubble(
                         .padding(12.dp)
                 ) {
                     Text(
-                        text = message.text,
+                        text = message.content,
                         style = MaterialTheme.typography.bodyMedium,
                         color = TextPrimary
                     )
@@ -79,7 +71,7 @@ fun ChatMessageBubble(
                         .padding(12.dp)
                 ) {
                     Text(
-                        text = message.text,
+                        text = message.content,
                         style = MaterialTheme.typography.bodyMedium,
                         color = White
                     )

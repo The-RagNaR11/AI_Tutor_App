@@ -1,4 +1,4 @@
-package com.ragnar.ai_tutor.core
+package com.ragnar.ai_tutor.speechModels
 
 import android.content.Context
 import android.speech.tts.TextToSpeech

@@ -11,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,6 +20,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -28,8 +32,8 @@ import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.outlined.Mic
-import androidx.compose.material.icons.outlined.PlayCircleFilled
 import androidx.compose.material.icons.outlined.SkipNext
 import androidx.compose.material.icons.outlined.SkipPrevious
 import androidx.compose.material.icons.outlined.SmartToy
@@ -63,13 +67,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.ragnar.ai_tutor.core.SpeechToText
-import com.ragnar.ai_tutor.core.TextToSpeech
-import com.ragnar.ai_tutor.item.ChatMessage
+import com.ragnar.ai_tutor.speechModels.SpeechToText
+import com.ragnar.ai_tutor.speechModels.TextToSpeech
 import com.ragnar.ai_tutor.item.ChatMessageBubble
+import com.ragnar.ai_tutor.chatBot.ChatViewModel
+import com.ragnar.ai_tutor.chatBot.ChatViewModelFactory
 import com.ragnar.ai_tutor.ui.theme.BackgroundPrimary
 import com.ragnar.ai_tutor.ui.theme.BackgroundSecondary
 import com.ragnar.ai_tutor.ui.theme.BrandPrimary
+import com.ragnar.ai_tutor.ui.theme.ColorError
 import com.ragnar.ai_tutor.ui.theme.ColorHint
 import com.ragnar.ai_tutor.ui.theme.ColorSuccess
 import com.ragnar.ai_tutor.ui.theme.SendButtonColor
@@ -78,13 +84,12 @@ import com.ragnar.ai_tutor.ui.theme.TextSecondary
 import com.ragnar.ai_tutor.ui.theme.WaveformActive
 import com.ragnar.ai_tutor.ui.theme.WaveformInactive
 import com.ragnar.ai_tutor.ui.theme.White
-import com.ragnar.ai_tutor.utils.AIChatUtils
 
 @Composable
 fun ChatScreen(
     ttsController: TextToSpeech = viewModel(), // TextToSpeech core Util
     sttController: SpeechToText = viewModel(), // SpeechToText core Util
-    chatBotController: AIChatUtils
+    chatBotController : ChatViewModel = viewModel (factory = ChatViewModelFactory("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")) //API key
 ) {
 
     val context = LocalContext.current
@@ -92,21 +97,36 @@ fun ChatScreen(
     val ttsState by ttsController.state.collectAsState() // TTS states
     val sttState by sttController.state.collectAsState() // STT states
 
+    // Collects chat state from ChatViewModel
+    val chatMessages by chatBotController.messages.collectAsState()
+    val isChatLoading by chatBotController.isLoading.collectAsState()
+
+    // Auto-scroll state for chat messages
+    val chatListState = rememberLazyListState()
+
     var messageInput by remember { mutableStateOf("") }
-    messageInput = sttState.resultText// user input message that is to be set to AI
+//    messageInput = sttState.resultText
+
     var audioSliderPosition by remember { mutableFloatStateOf(0.3f) } // slider to record the position of audio playback
     var audioVolume by remember { mutableFloatStateOf(0.5f) } // slider to record the position of volume
 
-    var aiMessageOutput by remember { mutableStateOf("Hi! I'm ready to help you learn. What would you like to work on today?") } // Output message from Ai Chat Bot
+    // FIXED: Get the latest AI message from chat history
+    val aiMessageOutput = chatMessages.lastOrNull { it.sender == "ai" }?.content
+        ?: "Hi! I'm ready to help you learn. What would you like to work on today?"
 
-    // Sample chat messages
-    val sampleMessages = listOf(
-        ChatMessage("Hi Sarah, I need help with algebra", false),
-        ChatMessage("Of course! I'd be happy to help you with algebra. What specific topic are you working on?", true),
-        ChatMessage("I'm struggling with quadratic equations", false),
-        ChatMessage("Quadratic equations can be tricky, but once you understand the pattern, they become much easier! Let's start with the basic form: ax² + bx + c = 0. Would you like me to walk you through solving one step by step?", true),
-        ChatMessage("Yes, that would be great!", false)
-    )
+    // FIXED: Update messageInput from STT when speech recognition completes
+    LaunchedEffect(sttState.resultText) {
+        if (sttState.resultText.isNotBlank() && !sttState.isSpeaking) {
+            messageInput = sttState.resultText
+        }
+    }
+
+    // Auto-scroll to bottom when new messages arrive
+    LaunchedEffect(chatMessages.size) {
+        if (chatMessages.isNotEmpty()) {
+            chatListState.animateScrollToItem(chatMessages.size - 1)
+        }
+    }
 
     // Permission launcher
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -119,7 +139,7 @@ fun ChatScreen(
         )
     }
 
-    // Lunch Activity
+    // Launch Activity
     LaunchedEffect(Unit) {
         sttController.initialize(context)
         ttsController.initialize(context)
@@ -160,8 +180,8 @@ fun ChatScreen(
                 style = MaterialTheme.typography.labelLarge
             )
             Text(
-                text = "•  Available to help",
-                color = ColorSuccess,
+                text = if (isChatLoading) "• Thinking..." else "• Available to help",
+                color = if (isChatLoading) ColorHint else ColorSuccess,
                 modifier = Modifier.padding(8.dp)
             )
 
@@ -201,20 +221,49 @@ fun ChatScreen(
                         .padding(0.dp, 10.dp)
                 ) {
                     Row(
-                        modifier = Modifier.padding(10.dp)
+                        modifier = Modifier.padding(10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Icon(
-                            Icons.Outlined.SmartToy,
-                            contentDescription = "AI Icon",
-                            tint = BrandPrimary
-                        )
+                        Row {
+                            Icon(
+                                Icons.Outlined.SmartToy,
+                                contentDescription = "AI Icon",
+                                tint = BrandPrimary
+                            )
+                            Spacer(modifier = Modifier.padding(4.dp)) // distance between logo and text
 
-                        Spacer(modifier = Modifier.padding(4.dp)) // distance between logo and text
-
-                        Text(
-                            text = "Sarah is saying: ",
-                            color = BrandPrimary
-                        )
+                            Text(
+                                text = "Sarah is saying: ",
+                                color = BrandPrimary
+                            )
+                        }
+                        Spacer(modifier = Modifier.weight(1f))
+                        // Play Pause Button
+                        IconButton(
+                            onClick = {
+                                if (ttsState.isInitialized) {
+                                    if (!ttsState.isSpeaking) {
+                                        ttsController.speak(aiMessageOutput)
+                                    }else {
+                                        ttsController.stop()
+                                    }
+                                } else {
+                                    ttsController.initialize(context)
+                                }
+                            },
+                            modifier = Modifier.size(25.dp),
+                            colors = IconButtonDefaults.iconButtonColors(
+                                containerColor = BrandPrimary,
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Icon(
+                                if (ttsState.isSpeaking) Icons.Default.Stop else Icons.Default.PlayArrow,
+                                contentDescription = "Play Audio",
+                                modifier = Modifier.size(40.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.padding(4.dp))
                     }
                     // Output message from the chat bot
                     Text(
@@ -237,16 +286,15 @@ fun ChatScreen(
              */
             Card(
                 border = BorderStroke(1.dp, ColorHint),
-                elevation = CardDefaults.cardElevation(defaultElevation = 12.dp) ,
-                modifier = Modifier
-                    .align(Alignment.Start)
+                elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
+                modifier = Modifier.align(Alignment.Start)
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(White)
                 ) {
-                    // Previous message display text
+                    // Header row
                     Row(
                         modifier = Modifier
                             .background(BackgroundSecondary)
@@ -258,35 +306,45 @@ fun ChatScreen(
                             contentDescription = "Previous Conversation Icon",
                             tint = TextPrimary
                         )
-                        Spacer(modifier = Modifier.padding(4.dp)) // distance between logo and text
+                        Spacer(modifier = Modifier.padding(4.dp))
                         Text(
                             text = "Previous Conversation: ",
                             color = TextPrimary
                         )
                     }
-                    /*
-                    Column for Chat layout
-                     */
-                    Column(
+
+                    // FIXED: Chat list now properly displays ChatMessage objects with auto-scroll
+                    LazyColumn(
+                        state = chatListState,
                         modifier = Modifier
-                            .height(300.dp) // Fixed height for scrollable chat
-                            .verticalScroll(rememberScrollState())
-                            .background(BackgroundPrimary)
-                            .padding(12.dp),
+                            .height(300.dp) // fixed height
+                            .fillMaxWidth(),
+                        contentPadding = PaddingValues(12.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // Display chat messages
-                        sampleMessages.forEach { message ->
-                            ChatMessageBubble(
-                                message = message,
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                        if (chatMessages.isEmpty()) {
+                            item {
+                                Text(
+                                    text = "No conversation yet...",
+                                    color = TextSecondary,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        } else {
+                            items(chatMessages) { message ->
+                                ChatMessageBubble(
+                                    message = message,
+                                    onRetry = if (message.canRetry) {
+                                        { chatBotController.retryLastMessage() }
+                                    } else null,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                            item {
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
                         }
-
-                        // Add some bottom padding
-                        Spacer(modifier = Modifier.height(8.dp))
                     }
-
                 }
             }
 
@@ -326,26 +384,30 @@ fun ChatScreen(
                                 focusedContainerColor = BackgroundSecondary,
                                 cursorColor = ColorHint,
                                 focusedTextColor = TextPrimary,
-                                unfocusedTextColor = TextSecondary,
+                                unfocusedTextColor = TextPrimary,
                                 unfocusedPlaceholderColor = TextSecondary,
                                 focusedPlaceholderColor = TextSecondary
                             )
                         )
 
-                        // IconButton for the send button
+                        // Button to send message to chat
                         IconButton(
                             onClick = {
-                                if (ttsState.isInitialized){
-                                    ttsController.speak(aiMessageOutput)
-                                }else {
-                                    ttsController.initialize(context)
+                                if (messageInput.isNotBlank() && !isChatLoading) {
+                                    // Send message to chatbot
+                                    chatBotController.sendMessage(messageInput)
+                                    // Clear input
+                                    messageInput = ""
+//                                    sttState.resultText = ""
                                 }
-
                             },
+                            enabled = messageInput.isNotBlank() && !isChatLoading,
                             modifier = Modifier.size(48.dp),
                             colors = IconButtonDefaults.iconButtonColors(
                                 containerColor = SendButtonColor,
-                                contentColor = Color.White
+                                contentColor = Color.White,
+                                disabledContainerColor = ColorHint,
+                                disabledContentColor = Color.White
                             )
                         ) {
                             Icon(
@@ -359,12 +421,12 @@ fun ChatScreen(
                             onClick = {
                                 Log.i("ChatScreen", "Mic Button Clicked")
                                 if (!sttState.isSpeaking) {
-                                    if (sttState.isInitialized and sttState.hasPermission) {
+                                    if (sttState.isInitialized && sttState.hasPermission) {
                                         sttController.startListening()
                                     } else if (!sttState.hasPermission){
                                         permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                                     }
-                                }else {
+                                } else {
                                     sttController.stopListening()
                                 }
                             },
@@ -382,7 +444,7 @@ fun ChatScreen(
 
                     // "Tap to send" text below the Row
                     Text(
-                        text = "Tap to send",
+                        text = if (isChatLoading) "Sending..." else "Tap to send",
                         style = MaterialTheme.typography.labelMedium,
                         color = ColorHint,
                         modifier = Modifier.padding(start = 20.dp, bottom = 8.dp)
@@ -473,8 +535,15 @@ fun ChatScreen(
                         // Play Pause Button
                         IconButton(
                             onClick = {
-//                                ttsController.updateText(aiMessageOutput)
-                                ttsController.speak(aiMessageOutput)
+                                if (ttsState.isInitialized) {
+                                    if (!ttsState.isSpeaking) {
+                                        ttsController.speak(aiMessageOutput)
+                                    }else {
+                                        ttsController.stop()
+                                    }
+                                } else {
+                                    ttsController.initialize(context)
+                                }
                             },
                             modifier = Modifier.size(64.dp),
                             colors = IconButtonDefaults.iconButtonColors(
@@ -483,21 +552,21 @@ fun ChatScreen(
                             )
                         ) {
                             Icon(
-                                Icons.Default.PlayArrow,
-                                contentDescription = "Skip Previous",
+                                if (ttsState.isSpeaking) Icons.Default.Stop else Icons.Default.PlayArrow,
+                                contentDescription = "Play Audio",
                                 modifier = Modifier.size(40.dp)
                             )
                         }
                         // Next Button
                         IconButton(
                             onClick = {
-                                Log.i("ChatScreen", "Previous Button Clicked")
+                                Log.i("ChatScreen", "Next Button Clicked")
                             },
 
-                        ) {
+                            ) {
                             Icon(
                                 Icons.Outlined.SkipNext,
-                                contentDescription = "Skip Previous",
+                                contentDescription = "Skip Next",
                                 tint = TextSecondary,
                                 modifier = Modifier.size(30.dp)
                             )

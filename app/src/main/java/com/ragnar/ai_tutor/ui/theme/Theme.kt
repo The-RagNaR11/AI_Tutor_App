@@ -2,6 +2,7 @@ package com.ragnar.ai_tutor.ui.theme
 
 import android.app.Activity
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
@@ -33,7 +34,7 @@ fun AppTheme(
 
     MaterialTheme(
         colorScheme = if (darkTheme) DarkColors else LightColors,
-        typography = androidx.compose.material3.Typography(),
+        typography = Typography(),
         content = content
     )
 }

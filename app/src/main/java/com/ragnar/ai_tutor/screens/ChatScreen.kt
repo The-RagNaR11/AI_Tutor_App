@@ -89,7 +89,7 @@ import com.ragnar.ai_tutor.ui.theme.White
 fun ChatScreen(
     ttsController: TextToSpeech = viewModel(), // TextToSpeech core Util
     sttController: SpeechToText = viewModel(), // SpeechToText core Util
-    chatBotController : ChatViewModel = viewModel (factory = ChatViewModelFactory("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")) //API key
+    chatBotController : ChatViewModel = viewModel (factory = ChatViewModelFactory("")) //API key
 ) {
 
     val context = LocalContext.current
@@ -110,13 +110,13 @@ fun ChatScreen(
     var audioSliderPosition by remember { mutableFloatStateOf(0.3f) } // slider to record the position of audio playback
     var audioVolume by remember { mutableFloatStateOf(0.5f) } // slider to record the position of volume
 
-    // FIXED: Get the latest AI message from chat history
+    // gets the latest AI message from chat history
     val aiMessageOutput = chatMessages.lastOrNull { it.sender == "ai" }?.content
         ?: "Hi! I'm ready to help you learn. What would you like to work on today?"
 
-    // FIXED: Update messageInput from STT when speech recognition completes
+    // updates messageInput from STT when speech recognition completes
     LaunchedEffect(sttState.resultText) {
-        if (sttState.resultText.isNotBlank() && !sttState.isSpeaking) {
+        if (sttState.resultText.isNotBlank()) {
             messageInput = sttState.resultText
         }
     }
@@ -313,7 +313,7 @@ fun ChatScreen(
                         )
                     }
 
-                    // FIXED: Chat list now properly displays ChatMessage objects with auto-scroll
+                    // ChatMessage with auto-scroll
                     LazyColumn(
                         state = chatListState,
                         modifier = Modifier
@@ -416,7 +416,7 @@ fun ChatScreen(
                             )
                         }
 
-                        // IconButton for the mic button
+                        // mic button
                         IconButton(
                             onClick = {
                                 Log.i("ChatScreen", "Mic Button Clicked")

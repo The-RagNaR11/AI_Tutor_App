@@ -114,6 +114,9 @@ class SpeechToText: ViewModel() {
         }
 
         try {
+            // Clear previous result
+            _state.value = _state.value.copy(resultText = "")
+
             speechRecognizer?.startListening(intent)
             _state.value = _state.value.copy(
                 isSpeaking = true,

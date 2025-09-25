@@ -232,7 +232,7 @@ class TextToSpeech : ViewModel(), TextToSpeech.OnInitListener {
             if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
                 updateStatus("Warning: Language $languageCode not fully supported, using fallback")
                 tts.language = Locale("en", "IN")
-                _state.value = _state.value.copy(selectedLanguage = "en-IN")
+                _state.value = _state.value.copy(selectedLanguage = "hi-IN")
             } else {
                 _state.value = _state.value.copy(selectedLanguage = languageCode)
             }

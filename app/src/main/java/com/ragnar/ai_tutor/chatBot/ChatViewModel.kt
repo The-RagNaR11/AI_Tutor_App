@@ -1,5 +1,6 @@
 package com.ragnar.ai_tutor.chatBot
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ragnar.ai_tutor.item.ChatMessage
@@ -14,67 +15,66 @@ class ChatViewModel(
 
     private val aiChatUtils = AIChatUtils(apiKey)
 
+    // a list to store recent chat for the current session
     private val _messages = MutableStateFlow<List<ChatMessage>>(emptyList())
     val messages: StateFlow<List<ChatMessage>> = _messages
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
-    // ADD THIS: Store the last user message for retry functionality
+    // local variable to store user message in case of any error
     private var lastUserMessage: String = ""
 
     fun sendMessage(userInput: String) {
         if (userInput.isBlank()) return
 
-        // ADD THIS: Store the message for retry
+        // storing user input to retry in case of error
         lastUserMessage = userInput
 
-        // Add user message immediately
         _messages.value = _messages.value + ChatMessage("user", userInput)
 
-        // ADD THIS: Call the new processAIRequest function
         processAIRequest()
     }
 
-    // ADD THIS: New retry function
+    // method to retry if there is any error
     fun retryLastMessage() {
         if (lastUserMessage.isNotBlank()) {
-            // Remove the last error message if it exists
             _messages.value = _messages.value.filter { !(it.sender == "ai" && it.isError) }
             processAIRequest()
         }
     }
 
-    // ADD THIS: New function to handle AI requests with better error handling
     private fun processAIRequest() {
         viewModelScope.launch {
             try {
                 _isLoading.value = true
 
-                // Send to AI
                 val aiReply = aiChatUtils.sendMessage(lastUserMessage)
 
                 // Check if response contains error
                 if (aiReply.startsWith("Error:")) {
-                    // Add error message with retry option
+                    // adds message even if there is error but with retry option
                     _messages.value = _messages.value + ChatMessage(
                         sender = "ai",
                         content = aiReply,
                         isError = true,
                         canRetry = true
                     )
+                    Log.e("ChatViewModel", "Error: Sender: AI\n $aiReply" )
                 } else {
-                    // Add successful AI response
+                    // on success reply from AI
                     _messages.value = _messages.value + ChatMessage("ai", aiReply)
+                    Log.i("ChatViewModel", "Success: Sender: AI\n $aiReply" )
                 }
             } catch (e: Exception) {
-                // Add error message with retry option
+                // adds message even if there is error but with retry option
                 _messages.value = _messages.value + ChatMessage(
                     sender = "ai",
                     content = "Failed to get response. Please check your connection and try again.",
                     isError = true,
                     canRetry = true
                 )
+                Log.e("ChatViewModel", "Error: $e" )
             } finally {
                 _isLoading.value = false
             }

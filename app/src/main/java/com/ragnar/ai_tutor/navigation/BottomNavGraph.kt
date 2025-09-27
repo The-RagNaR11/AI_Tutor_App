@@ -7,7 +7,7 @@ import androidx.navigation.compose.composable
 import com.ragnar.ai_tutor.item.BottomNavItem
 import com.ragnar.ai_tutor.screens.ChatScreen
 import com.ragnar.ai_tutor.screens.LessonScreen
-import com.ragnar.ai_tutor.screens.SettingScreen
+import com.ragnar.ai_tutor.screens.ProfileScreen
 
 @Composable
 fun BottomNavGraph(navController: NavHostController) {
@@ -19,8 +19,8 @@ fun BottomNavGraph(navController: NavHostController) {
         composable(BottomNavItem.lesson.route){
             LessonScreen()
         }
-        composable(BottomNavItem.setting.route){
-            SettingScreen()
+        composable(BottomNavItem.profile.route){
+            ProfileScreen()
         }
     }
 }

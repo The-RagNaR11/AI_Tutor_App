@@ -34,7 +34,7 @@ fun BottomNavMainScreen() {
     val items = listOf (
         BottomNavItem.chat,
         BottomNavItem.lesson,
-        BottomNavItem.setting
+        BottomNavItem.profile
     )
 
     Scaffold(

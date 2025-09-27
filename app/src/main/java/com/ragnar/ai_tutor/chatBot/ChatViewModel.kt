@@ -22,6 +22,11 @@ class ChatViewModel(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
+    // for PopUp simulation screen
+    private var messageCount = 0
+    private val _showPopup = MutableStateFlow(false)
+    val showPopup: StateFlow<Boolean> = _showPopup
+
     // local variable to store user message in case of any error
     private var lastUserMessage: String = ""
 
@@ -32,6 +37,12 @@ class ChatViewModel(
         lastUserMessage = userInput
 
         _messages.value = _messages.value + ChatMessage("user", userInput)
+
+        //Increment and check if it's the 2nd chat
+        messageCount++
+        if (messageCount % 2 == 0) {
+            _showPopup.value = true
+        }
 
         processAIRequest()
     }
@@ -79,5 +90,8 @@ class ChatViewModel(
                 _isLoading.value = false
             }
         }
+    }
+    fun dismissPopUp() {
+        _showPopup.value = false
     }
 }

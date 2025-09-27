@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     id("org.jetbrains.kotlin.plugin.compose") version "2.0.21"
+    id("com.google.gms.google-services")
+    id("kotlin-parcelize")
 }
 
 android {
@@ -43,6 +45,11 @@ android {
 dependencies {
     // for http request
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // For Google Sign In using Credential Manager
+    implementation("androidx.credentials:credentials:1.2.2")
+    implementation("androidx.credentials:credentials-play-services-auth:1.2.2")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.0")
 
     implementation(platform("androidx.compose:compose-bom:2024.09.01"))
     // Core Compose

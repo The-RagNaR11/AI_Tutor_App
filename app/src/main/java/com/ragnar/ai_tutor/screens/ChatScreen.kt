@@ -67,15 +67,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.ragnar.ai_tutor.speechModels.SpeechToText
-import com.ragnar.ai_tutor.speechModels.TextToSpeech
-import com.ragnar.ai_tutor.item.ChatMessageBubble
+import com.ragnar.ai_tutor.R
 import com.ragnar.ai_tutor.chatBot.ChatViewModel
 import com.ragnar.ai_tutor.chatBot.ChatViewModelFactory
+import com.ragnar.ai_tutor.item.ChatMessageBubble
+import com.ragnar.ai_tutor.menu.WebViewAlertDialog
+import com.ragnar.ai_tutor.speechModels.SpeechToText
+import com.ragnar.ai_tutor.speechModels.TextToSpeech
 import com.ragnar.ai_tutor.ui.theme.BackgroundPrimary
 import com.ragnar.ai_tutor.ui.theme.BackgroundSecondary
 import com.ragnar.ai_tutor.ui.theme.BrandPrimary
-import com.ragnar.ai_tutor.ui.theme.ColorError
 import com.ragnar.ai_tutor.ui.theme.ColorHint
 import com.ragnar.ai_tutor.ui.theme.ColorSuccess
 import com.ragnar.ai_tutor.ui.theme.SendButtonColor
@@ -89,7 +90,7 @@ import com.ragnar.ai_tutor.ui.theme.White
 fun ChatScreen(
     ttsController: TextToSpeech = viewModel(), // TextToSpeech core Util
     sttController: SpeechToText = viewModel(), // SpeechToText core Util
-    chatBotController : ChatViewModel = viewModel (factory = ChatViewModelFactory("")) //API key
+    chatBotController : ChatViewModel = viewModel (factory = ChatViewModelFactory(R.string.chat_bot_api_key.toString())) //API key
 ) {
 
     val context = LocalContext.current
@@ -113,6 +114,17 @@ fun ChatScreen(
     // gets the latest AI message from chat history
     val aiMessageOutput = chatMessages.lastOrNull { it.sender == "ai" }?.content
         ?: "Hi! I'm ready to help you learn. What would you like to work on today?"
+
+    // state for customAlertBox
+    val showDialog by chatBotController.showPopup.collectAsState()
+    // show popUp simulation screen
+    if (showDialog){
+        WebViewAlertDialog(
+            url = "file:///android_asset/RaceStory.html",
+            showDialog = showDialog,
+            onDismiss = { chatBotController.dismissPopUp() }
+        )
+    }
 
     // updates messageInput from STT when speech recognition completes
     LaunchedEffect(sttState.resultText) {

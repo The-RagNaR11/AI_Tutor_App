@@ -11,7 +11,7 @@ import com.ragnar.ai_tutor.screens.ProfileScreen
 
 @Composable
 fun BottomNavGraph(navController: NavHostController) {
-    NavHost(navController, startDestination = BottomNavItem.chat.route) {
+    NavHost(navController, startDestination = BottomNavItem.profile.route) {
 
         composable(BottomNavItem.chat.route){
             ChatScreen()

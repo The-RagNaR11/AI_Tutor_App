@@ -3,6 +3,7 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.result.ActivityResult
 import androidx.credentials.CredentialManager
@@ -43,7 +44,7 @@ class GoogleSignInUtils {
                                 val googleTokenId = googleIdTokenCredential.idToken
 
                                 Log.d("GoogleSignIn", "Google Token Id: $googleTokenId")
-
+//                                Toast.makeText(context, "Sign-in cancelled. Please try again.", Toast.LENGTH_SHORT).show()
                                 // Extract user information
                                 val userInfo = GoogleUserInfoExtractor.extractAndLogUserInfo(googleIdTokenCredential)
 

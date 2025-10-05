@@ -10,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.ragnar.ai_tutor.item.GoogleUserPrefs
 import com.ragnar.ai_tutor.screens.BottomNavMainScreen
+import com.ragnar.ai_tutor.screens.ChatScreen
 import com.ragnar.ai_tutor.screens.SignUpScreen
 import com.ragnar.ai_tutor.ui.theme.AppTheme
 
@@ -20,6 +21,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             AppTheme {
+//                ChatScreen()
                 if (GoogleUserPrefs.isUserLoggedIn(this)) {
                     BottomNavMainScreen()
                 }
